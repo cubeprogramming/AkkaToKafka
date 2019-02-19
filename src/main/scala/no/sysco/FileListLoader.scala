@@ -1,7 +1,11 @@
 package no.sysco
 
+import java.util.Properties
+
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import better.files._
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerConfig, ProducerRecord}
+import org.apache.kafka.common.serialization.StringSerializer
 
 
 //#FileProcessor-companion
@@ -20,15 +24,25 @@ class FileProcessor(kafkaWriter: ActorRef) extends Actor {
   import FileProcessor._
   import KafkaWriter._
 
+  val bootstrapServers = "127.0.0.1:9092"
+
+  val properties = new Properties
+  properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
+  properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+  properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, classOf[StringSerializer].getName)
+
   def receive = {
     case FileToProcess(fileRef) =>{
       val fileIterator = fileRef.lineIterator
       val csvToJson = CsvToJson(fileIterator.next())
+      val producer = new KafkaProducer[String, String](properties)
 
       for {
         //line <- fileRef.lineIterator.drop(1)
         line <- fileIterator
-      } kafkaWriter ! WriteLine(line, csvToJson)
+      } kafkaWriter ! WriteLine(line, csvToJson, producer)
+
+      producer.flush()
     }
   }
 
@@ -41,7 +55,7 @@ object KafkaWriter {
   //#KafkaWriter-messages
   def props: Props = Props[KafkaWriter]
   //#KafkaWriter-messages
-  final case class WriteLine(line: String, csvToJson: CsvToJson)
+  final case class WriteLine(line: String, csvToJson: CsvToJson, producer: KafkaProducer[String, String])
 }
 //#KafkaWriter-messages
 //#KafkaWriter-companion
@@ -50,11 +64,17 @@ object KafkaWriter {
 class KafkaWriter extends Actor with ActorLogging {
   import KafkaWriter._
 
+  val topicName = "first_topic"
+
   def receive = {
-    case WriteLine(line, csvToJson) => {
+    case WriteLine(line, csvToJson, producer) => {
       //log.info("CSV line received (from " + sender() + "): " + line)
       val json = csvToJson.convertToJson(line)
-      println(json.get.prettyPrint)
+      val jsonString = json.get.prettyPrint
+      log.info(jsonString)
+
+      val record = new ProducerRecord[String, String](topicName, jsonString)
+      producer.send(record)
     }
 
   }

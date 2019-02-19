@@ -31,7 +31,7 @@ class FileListLoaderSpec (_system: ActorSystem)
       val fileIterator = testFile.lineIterator
       val csvToJson = CsvToJson(fileIterator.next())
       val line = fileIterator.next()
-      val expectedObject = WriteLine(line, csvToJson)
+      val expectedObject = WriteLine(line, csvToJson, null)
 
       val fileProcessor: ActorRef = system.actorOf(FileProcessor.props(testProbe.ref))
       fileProcessor ! FileToProcess(testFile)
