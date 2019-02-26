@@ -8,3 +8,4 @@ This is a Demo project which purpose is to demonstrate Akk Actor instantiation a
 2. Message is sent to first set of Actors containing the file to be processed (FileProcessor)
 3. File is read and each line is send to second set of Actors (KafkaWriter)
 4. Each KafkaWriter actor is than converting CSV line to JSON format 
+5. Line is written as a JSON snippet to Kafka topic

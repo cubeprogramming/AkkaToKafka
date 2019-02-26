@@ -2,7 +2,7 @@ name := "akka-to-kafka"
 
 version := "1.0"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.7"
 
 lazy val akkaVersion = "2.5.19"
 lazy val betterFilesVersion = "3.7.0"
