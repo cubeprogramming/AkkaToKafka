@@ -1,6 +1,6 @@
 # AkkaToKafka
 
-This is a Demo project which purpose is to demonstrate Akk Actor instantiation and message sending to Kafka
+This is a Demo project which purpose is to demonstrate Akka Actor instantiation and message sending to Kafka
 
 ## Code description
 
